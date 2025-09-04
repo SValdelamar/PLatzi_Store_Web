@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Productos{% endblock %}
+
+{% block content %}
+<div class="products-header">
+    <h2 class="section-title">Nuestros Productos</h2>
+    <a href="{% url 'products:crear_producto' %}" class="btn btn-primary">Crear nuevo producto</a>
+</div>
+
+{% if productos %}
+<div class="product-grid">
+    {% for product in productos %}
+    <div class="product-card">
+        <img src="{{ product.images.0 }}" class="product-image" alt="{{ product.title }}">
+        <div class="card-content">
+            <h5 class="card-title">{{ product.title }}</h5>
+            <p class="card-description">{{ product.description|truncatechars:100 }}</p>
+            <p class="card-price">${{ product.price }}</p>
+            <div class="product-actions">
+                <a href="{% url 'products:editar_producto_form' product.id %}" class="btn btn-primary">Editar</a>
+                <form action="{% url 'products:eliminar_producto' product.id %}" method="post" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <p>No hay productos disponibles en este momento.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Producto{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-wrapper">
+        <h2 class="form-title">Editar Producto</h2>
+
+        <form id="editar-producto-form">
+            {% csrf_token %}
+            <div id="alert-message"></div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre del producto</label>
+                <input type="text" name="nombre" id="nombre" value="{{ producto.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="precio">Precio del producto</label>
+                <input type="number" step="0.01" name="precio" id="precio" value="{{ producto.price }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción del producto</label>
+                <textarea name="descripcion" id="descripcion" rows="4" required>{{ producto.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="images">URL de la imagen del producto</label>
+                <textarea name="images" id="images" rows="2" readonly>{{ producto.images.0 }}</textarea>
+            </div>
+
+            <input type="hidden" id="product-id" value="{{ producto.id }}">
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submit-btn">Guardar Cambios</button>
+                <a href="{% url 'products:products' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('editar-producto-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const alertDiv = document.getElementById('alert-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const productId = document.getElementById('product-id').value;
+
+        const productData = {
+            title: document.getElementById('nombre').value,
+            price: document.getElementById('precio').value,
+            description: document.getElementById('descripcion').value,
+            images: [document.getElementById('images').value],
+        };
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando...';
+        alertDiv.innerHTML = ''; // Limpia mensajes anteriores
+
+        fetch(`/api/products/${productId}/editar/`, {
+            method: 'PUT',
+            body: JSON.stringify(productData),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || 'Error desconocido.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alertDiv.innerHTML = '<div class="alert alert-success" role="alert">Producto actualizado exitosamente. Redirigiendo...</div>';
+                setTimeout(() => {
+                    window.location.href = "{% url 'products:products' %}";
+                }, 2000);
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${data.error}</div>`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Guardar Cambios';
+            }
+        })
+        .catch(error => {
+            alertDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error de conexión: ${error.message}</div>`;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar Cambios';
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}

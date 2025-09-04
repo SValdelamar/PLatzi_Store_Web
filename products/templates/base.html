@@ -1,0 +1,48 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <title>{% block title %}Platzi Fake Store{% endblock %}</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content-wrapper">
+            <div class="header-brand"> {# Nuevo contenedor para el logo y texto del encabezado #}
+                <img src="https://codevars.gallerycdn.vsassets.io/extensions/codevars/platzi-theme-for-vs-code/1.0.1/1633114361855/Microsoft.VisualStudio.Services.Icons.Default" class="site-logo"> {# Agregamos el logo #}
+                <div class="header-text-container">
+                    <h1 class="site-title">Platzi Fake Store</h1>
+                    <p class="site-tagline">Simplemente productos falsos, profesionalmente diseñados.</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <div class="nav-links">
+                    {% if request.resolver_match.url_name == 'crear_producto' %}
+                        <a href="{% url 'products:products' %}" class="nav-item">Volver a productos</a>
+                    {% elif request.resolver_match.url_name == 'products' %}
+                        <a href="{% url 'products:inicio' %}" class="nav-item">Volver al inicio</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Platzi Fake Store. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

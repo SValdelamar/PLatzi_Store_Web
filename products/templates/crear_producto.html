@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crear Nuevo Producto{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-wrapper">
+        <h2 class="form-title">Crear Nuevo Producto</h2>
+
+        <form id="crear-producto-form">
+            {% csrf_token %}
+            <div id="alert-message"></div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre del producto</label>
+                <input type="text" name="nombre" id="nombre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="precio">Precio del producto</label>
+                <input type="number" step="0.01" name="precio" id="precio" required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción del producto</label>
+                <textarea name="descripcion" id="descripcion" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="imagen">URL de la imagen del producto</label>
+                <input type="url" name="imagen" id="imagen" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submit-btn">Crear Producto</button>
+                <a href="{% url 'products:products' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('crear-producto-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const alertDiv = document.getElementById('alert-message');
+        const submitBtn = document.getElementById('submit-btn');
+
+        const productData = {
+            nombre: document.getElementById('nombre').value,
+            precio: document.getElementById('precio').value,
+            descripcion: document.getElementById('descripcion').value,
+            imagen: document.getElementById('imagen').value,
+        };
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creando...';
+        alertDiv.innerHTML = ''; // Limpia mensajes anteriores
+
+        fetch("{% url 'products:api_crear_producto' %}", {
+            method: 'POST',
+            body: JSON.stringify(productData),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alertDiv.innerHTML = '<div class="alert alert-success" role="alert">Producto creado exitosamente. Redirigiendo...</div>';
+                setTimeout(() => {
+                    window.location.href = "{% url 'products:products' %}";
+                }, 2000);
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${data.error}</div>`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Crear Producto';
+            }
+        })
+        .catch(error => {
+            alertDiv.innerHTML = '<div class="alert alert-danger" role="alert">Error de conexión. Inténtelo de nuevo.</div>';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Crear Producto';
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}

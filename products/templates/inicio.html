@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-text">
+        <h1 class="hero-title">¡Bienvenido a la Platzi Fake Store!</h1>
+        <p class="hero-description">Explora nuestra increíble colección de productos falsos.</p>
+        <a href="{% url 'products:products' %}" class="btn btn-primary">Ver productos</a>
+    </div>
+    <div class="hero-image">
+        <img src="https://radionacional-v3.s3.amazonaws.com/s3fs-public/styles/portadas_relaciona_4_3/public/node/article/field_image/hangers-ga67cff71c_1280.jpg?h=1c9b88c9&itok=f8JZUxpO"
+</div>
+{% endblock %}
