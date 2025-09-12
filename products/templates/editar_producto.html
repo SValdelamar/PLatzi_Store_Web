@@ -13,22 +13,23 @@
             <div id="alert-message"></div>
 
             <div class="form-group">
-                <label for="nombre">Nombre del producto</label>
-                <input type="text" name="nombre" id="nombre" value="{{ producto.title }}" required>
+                <label for="title">Nombre del producto</label>
+                <input type="text" name="title" id="title" value="{{ producto.title }}" required>
             </div>
 
             <div class="form-group">
-                <label for="precio">Precio del producto</label>
-                <input type="number" step="0.01" name="precio" id="precio" value="{{ producto.price }}" required>
+                <label for="price">Precio del producto</label>
+                <input type="number" step="0.01" name="price" id="price" value="{{ producto.price }}" required>
             </div>
 
             <div class="form-group">
-                <label for="descripcion">Descripción del producto</label>
-                <textarea name="descripcion" id="descripcion" rows="4" required>{{ producto.description }}</textarea>
+                <label for="description">Descripción del producto</label>
+                <textarea name="description" id="description" rows="4" required>{{ producto.description }}</textarea>
             </div>
+            
             <div class="form-group">
                 <label for="images">URL de la imagen del producto</label>
-                <textarea name="images" id="images" rows="2" readonly>{{ producto.images.0 }}</textarea>
+                <input type="url" name="images" id="images" value="{{ producto.images.0 }}" readonly>
             </div>
 
             <input type="hidden" id="product-id" value="{{ producto.id }}">
@@ -47,21 +48,21 @@
     document.getElementById('editar-producto-form').addEventListener('submit', function(event) {
         event.preventDefault();
 
-        const form = event.target;
         const alertDiv = document.getElementById('alert-message');
         const submitBtn = document.getElementById('submit-btn');
         const productId = document.getElementById('product-id').value;
 
+        // Asegúrate de que las claves del objeto coincidan con lo que espera tu vista
+        // y la API de Platzi (title, price, description).
         const productData = {
-            title: document.getElementById('nombre').value,
-            price: document.getElementById('precio').value,
-            description: document.getElementById('descripcion').value,
-            images: [document.getElementById('images').value],
+            title: document.getElementById('title').value,
+            price: document.getElementById('price').value,
+            description: document.getElementById('description').value,
         };
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'Guardando...';
-        alertDiv.innerHTML = ''; // Limpia mensajes anteriores
+        alertDiv.innerHTML = '';
 
         fetch(`/api/products/${productId}/editar/`, {
             method: 'PUT',
@@ -73,8 +74,9 @@
         })
         .then(response => {
             if (!response.ok) {
+                // Si la respuesta no es OK, intenta leer el error del JSON de la respuesta
                 return response.json().then(errorData => {
-                    throw new Error(errorData.error || 'Error desconocido.');
+                    throw new Error(errorData.error || `Error desconocido: ${response.status}`);
                 });
             }
             return response.json();

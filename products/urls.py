@@ -11,6 +11,7 @@ urlpatterns = [
     # Esta es la ruta que renderiza el formulario de creación de productos (GET).
     path('crear/', views.crear_producto_view_form, name="crear_producto"),
     # Esta ruta es el endpoint de la API para procesar la creación (POST).
+    
     path('api/crear/', views.crear_producto, name="api_crear_producto"),
     
     path('products/<int:product_id>/editar/', views.editar_producto_form, name="editar_producto_form"),

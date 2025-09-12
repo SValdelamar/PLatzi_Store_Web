@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
 
+
 def inicio(request):
     """
     Esta vista renderiza la plantilla de inicio.
@@ -35,46 +36,76 @@ def porducts_views(request):
         return render(request, "lista_productos.html", {'error': f'Ocurrió un error inesperado: {str(e)}'})
     
 
+# views.py
+
+from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+import requests
+import json
+from django.shortcuts import redirect
+from django.contrib import messages
+
+# ... (otras vistas)
+
 def crear_producto_view_form(request):
     """
-    Esta vista renderiza el formulario para crear un nuevo producto.
-    """
-    return render(request, "crear_producto.html")
-
-@csrf_exempt
-@require_http_methods(["POST"])
-
-
-def crear_producto(request):
-    """
-    Esta vista actúa como un endpoint de API para manejar la petición POST
-    de creación de un nuevo producto.
+    Esta vista obtiene las categorías de la API y renderiza
+    el formulario para crear un nuevo producto con una lista desplegable.
     """
     try:
-        # Cargar los datos JSON del cuerpo de la petición
+        # Obtener la lista de categorías desde la API
+        response = requests.get("https://api.escuelajs.co/api/v1/categories", timeout=10)
+        response.raise_for_status()
+        categorias = response.json()
+        
+        # Filtramos las categorías para asegurarnos de que solo tengan 'id' y 'name'
+        categorias_limpias = [
+            {'id': cat['id'], 'name': cat['name']}
+            for cat in categorias
+        ]
+
+        return render(request, "crear_producto.html", {'categorias': categorias_limpias})
+
+    except requests.exceptions.RequestException as e:
+        # Si hay un error de conexión, renderizar el formulario sin categorías y mostrar un mensaje
+        messages.error(request, f"No se pudieron cargar las categorías desde la API. Por favor, inténtelo de nuevo más tarde. Error: {e}")
+        return render(request, "crear_producto.html", {'categorias': []})
+    except Exception as e:
+        messages.error(request, f"Ocurrió un error inesperado: {str(e)}")
+        return render(request, "crear_producto.html", {'categorias': []})
+
+# La vista crear_producto (para la API) se mantiene igual,
+# pero ahora recibirá un categoryId en lugar de una categoría
+@require_http_methods(["POST"])
+def crear_producto(request):
+    """
+    Maneja la petición POST de creación de un nuevo producto.
+    """
+    try:
         data = json.loads(request.body)
         nombre = data.get("nombre")
         precio = data.get("precio")
         descripcion = data.get("descripcion")
+        # Ahora esperamos un categoryId
+        categoria_id = data.get("categoriaId")
         imagen_url = data.get("imagen")
         
-        if not all([nombre, precio, descripcion, imagen_url]):
+        # Validación de campos requeridos
+        if not all([nombre, precio, descripcion, categoria_id, imagen_url]):
             return JsonResponse({'success': False, 'error': 'Todos los campos son requeridos'}, status=400)
         
-        base_url = "https://api.escuelajs.co/api/v1/"
-        
-        # Corregir la estructura de los datos que se envían a la API
         productos_data = {
             "title": nombre,
             "price": float(precio),
             "description": descripcion,
-            "categoryId": 1,
+            "categoryId": int(categoria_id),  # Aseguramos que sea un entero
             "images": [imagen_url],
         }
         
-        # Realizar la petición POST a la API
+        base_url = "https://api.escuelajs.co/api/v1/"
         subir_respuesta = requests.post(f"{base_url}products/", json=productos_data, timeout=10)
-        subir_respuesta.raise_for_status()  # Lanzará una excepción para códigos de error 4xx/5xx
+        subir_respuesta.raise_for_status()
         
         if subir_respuesta.status_code == 201:
             datos = subir_respuesta.json()
@@ -85,8 +116,8 @@ def crear_producto(request):
                 'error': f'Error en la API: {subir_respuesta.status_code} - {subir_respuesta.text}'
             }, status=subir_respuesta.status_code)
             
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Formato de datos JSON no válido.'}, status=400)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Formato de datos no válido.'}, status=400)
     except requests.exceptions.RequestException as e:
         return JsonResponse({'success': False, 'error': f'Error de conexión con la API: {str(e)}'}, status=500)
     except Exception as e:
@@ -110,6 +141,8 @@ def editar_producto_form(request, product_id):
         return redirect('products:products')
 
 
+# ... (otras importaciones y vistas)
+
 @csrf_exempt
 @require_http_methods(["PUT"])
 def editar_producto(request, product_id):
@@ -132,19 +165,34 @@ def editar_producto(request, product_id):
         }
 
         base_url = "https://api.escuelajs.co/api/v1/"
+        
+        # Realizar la petición PUT a la API
         subir_respuesta = requests.put(f"{base_url}products/{product_id}", json=productos_data, timeout=10)
+        
+        # Lanza una excepción para códigos de error 4xx/5xx
         subir_respuesta.raise_for_status()
 
         if subir_respuesta.status_code == 200:
             return JsonResponse({'success': True, 'data': subir_respuesta.json()})
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': f'Error en la API: {subir_respuesta.status_code} - {subir_respuesta.text}'
-            }, status=subir_respuesta.status_code)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Formato de datos JSON no válido.'}, status=400)
+    
+    except requests.exceptions.HTTPError as e:
+        # Captura errores HTTP específicos y devuelve un mensaje claro
+        return JsonResponse({
+            'success': False,
+            'error': f'Error en la API: {e.response.status_code} - {e.response.reason} para el ID {product_id}'
+        }, status=e.response.status_code)
+        
+    except requests.exceptions.RequestException as e:
+        # Captura otros errores de conexión
+        return JsonResponse({'success': False, 'error': f'Error de conexión con la API: {str(e)}'}, status=500)
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Ocurrió un error inesperado en el servidor: {str(e)}'}, status=500)
 
-    except (json.JSONDecodeError, requests.exceptions.RequestException) as e:
-        return JsonResponse({'success': False, 'error': f'Ocurrió un error: {str(e)}'}, status=500)
+# ... (otras vistas)
 
 
 @require_http_methods(["POST"])
@@ -165,7 +213,3 @@ def eliminar_producto(request, product_id):
         messages.error(request, f"Error de conexión al intentar eliminar el producto: {e}")
     
     return redirect('products:products')
-
-
-    
-    
