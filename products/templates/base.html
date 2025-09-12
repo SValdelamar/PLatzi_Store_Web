@@ -5,44 +5,69 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <!-- Estilos principales -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
+
     <title>{% block title %}Platzi Fake Store{% endblock %}</title>
 </head>
 <body>
+    <!-- HEADER -->
     <header class="main-header">
         <div class="header-content-wrapper">
-            <div class="header-brand"> {# Nuevo contenedor para el logo y texto del encabezado #}
-                <img src="https://codevars.gallerycdn.vsassets.io/extensions/codevars/platzi-theme-for-vs-code/1.0.1/1633114361855/Microsoft.VisualStudio.Services.Icons.Default" class="site-logo"> {# Agregamos el logo #}
+            <div class="header-brand">
+                <!-- Logo -->
+                <img src="https://codevars.gallerycdn.vsassets.io/extensions/codevars/platzi-theme-for-vs-code/1.0.1/1633114361855/Microsoft.VisualStudio.Services.Icons.Default" 
+                     class="site-logo" alt="Logo de Platzi Fake Store">
+
+                <!-- Título y tagline -->
                 <div class="header-text-container">
                     <h1 class="site-title">Platzi Fake Store</h1>
                     <p class="site-tagline">Simplemente productos falsos, profesionalmente diseñados.</p>
                 </div>
             </div>
+
+            <!-- Menú de navegación -->
             <nav class="main-nav">
                 <div class="nav-links">
-                    {% if request.resolver_match.url_name == 'crear_producto' %}
-                        <a href="{% url 'products:products' %}" class="nav-item">Volver a productos</a>
-                    {% elif request.resolver_match.url_name == 'products' %}
-                        <a href="{% url 'products:inicio' %}" class="nav-item">Volver al inicio</a>
+                    <a href="{% url 'products:inicio' %}" class="nav-item">Inicio</a>
+                    <a href="{% url 'products:products' %}" class="nav-item">Productos</a>
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:logout' %}" class="nav-item">Cerrar Sesión</a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="nav-item">Iniciar Sesión</a>
                     {% endif %}
                 </div>
             </nav>
         </div>
     </header>
 
+    <!-- Mensajes de Django -->
+    <section class="container mt-3">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Contenido principal -->
     <main class="container">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
     
+    <!-- FOOTER -->
     <footer class="main-footer">
         <div class="footer-content">
             <p>&copy; 2025 Platzi Fake Store. Todos los derechos reservados.</p>
         </div>
     </footer>
 
-    {% block scripts %}
-    {% endblock %}
+    <!-- Scripts opcionales -->
+    {% block scripts %}{% endblock %}
 </body>
 </html>

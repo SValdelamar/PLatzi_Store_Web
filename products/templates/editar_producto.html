@@ -26,12 +26,13 @@
                 <label for="description">Descripción del producto</label>
                 <textarea name="description" id="description" rows="4" required>{{ producto.description }}</textarea>
             </div>
-            
+
             <div class="form-group">
-                <label for="images">URL de la imagen del producto</label>
-                <input type="url" name="images" id="images" value="{{ producto.images.0 }}" readonly>
+                <label for="images">URL de la imagen</label>
+                <input type="url" name="images" id="images" value="{{ producto.images.0 }}" required>
             </div>
 
+            <input type="hidden" id="category-id" value="{{ producto.category.id }}">
             <input type="hidden" id="product-id" value="{{ producto.id }}">
 
             <div class="form-actions">
@@ -51,13 +52,14 @@
         const alertDiv = document.getElementById('alert-message');
         const submitBtn = document.getElementById('submit-btn');
         const productId = document.getElementById('product-id').value;
+        const categoryId = document.getElementById('category-id').value;
 
-        // Asegúrate de que las claves del objeto coincidan con lo que espera tu vista
-        // y la API de Platzi (title, price, description).
         const productData = {
             title: document.getElementById('title').value,
             price: document.getElementById('price').value,
             description: document.getElementById('description').value,
+            categoryId: parseInt(categoryId),
+            images: [document.getElementById('images').value]
         };
 
         submitBtn.disabled = true;
@@ -74,7 +76,6 @@
         })
         .then(response => {
             if (!response.ok) {
-                // Si la respuesta no es OK, intenta leer el error del JSON de la respuesta
                 return response.json().then(errorData => {
                     throw new Error(errorData.error || `Error desconocido: ${response.status}`);
                 });
@@ -83,18 +84,18 @@
         })
         .then(data => {
             if (data.success) {
-                alertDiv.innerHTML = '<div class="alert alert-success" role="alert">Producto actualizado exitosamente. Redirigiendo...</div>';
+                alertDiv.innerHTML = '<div class="alert alert-success">Producto actualizado exitosamente. Redirigiendo...</div>';
                 setTimeout(() => {
                     window.location.href = "{% url 'products:products' %}";
                 }, 2000);
             } else {
-                alertDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${data.error}</div>`;
+                alertDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Guardar Cambios';
             }
         })
         .catch(error => {
-            alertDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error de conexión: ${error.message}</div>`;
+            alertDiv.innerHTML = `<div class="alert alert-danger">Error de conexión: ${error.message}</div>`;
             submitBtn.disabled = false;
             submitBtn.textContent = 'Guardar Cambios';
             console.error('Error:', error);
