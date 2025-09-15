@@ -196,10 +196,14 @@ def pagar_producto(request, product_id):
     Muestra el formulario de pago para un producto específico.
     """
     try:
+        # Llamada a la API para obtener el producto
         response = requests.get(f"https://api.escuelajs.co/api/v1/products/{product_id}", timeout=10)
         response.raise_for_status()
         producto = response.json()
+
+        # Enviamos el producto al template
         return render(request, "pagar_producto.html", {'producto': producto})
+
     except requests.exceptions.RequestException as e:
         messages.error(request, f"Error al obtener el producto para pago: {e}")
         return redirect('products:products')
