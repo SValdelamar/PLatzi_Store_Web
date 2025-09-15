@@ -10,7 +10,33 @@
         <p class="hero-description">Explora nuestra increíble colección de productos falsos.</p>
         <a href="{% url 'products:products' %}" class="btn btn-primary">Ver productos</a>
     </div>
-    <div class="hero-image">
-        <img src="https://radionacional-v3.s3.amazonaws.com/s3fs-public/styles/portadas_relaciona_4_3/public/node/article/field_image/hangers-ga67cff71c_1280.jpg?h=1c9b88c9&itok=f8JZUxpO">
+
+    <!-- Carrusel -->
+    <div class="hero-carousel">
+        <div class="carousel-container">
+            <img src="https://radionacional-v3.s3.amazonaws.com/s3fs-public/styles/portadas_relaciona_4_3/public/node/article/field_image/hangers-ga67cff71c_1280.jpg?h=1c9b88c9&itok=f8JZUxpO" class="carousel-image active" alt="Imagen 1">
+            <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" class="carousel-image" alt="Imagen 2">
+            <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f" class="carousel-image" alt="Imagen 3">
+        </div>
+    </div>
 </div>
+
+<!-- Script para el carrusel -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const images = document.querySelectorAll('.carousel-image');
+        let currentIndex = 0;
+
+        setInterval(() => {
+            // Oculta la imagen actual
+            images[currentIndex].classList.remove('active');
+
+            // Pasa a la siguiente imagen
+            currentIndex = (currentIndex + 1) % images.length;
+
+            // Muestra la nueva imagen
+            images[currentIndex].classList.add('active');
+        }, 1000); // Cambia cada 1 segundo
+    });
+</script>
 {% endblock %}

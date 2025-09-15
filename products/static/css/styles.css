@@ -1,3 +1,4 @@
+
 /* ===================================
    1. VARIABLES CSS (Custom Properties)
    =================================== */
@@ -1048,3 +1049,205 @@ a:focus-visible {
     color: #fd1d1d;
     text-decoration: underline;
 }
+
+/* ===================================
+    18. ESTILOS PARA DROPDOWN LOGIN
+=================================== */
+
+/* Contenedor principal */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Botón que activa el dropdown */
+.dropbtn {
+    background: var(--gradient-instagram);
+    color: var(--color-text-primary);
+    padding: 10px 18px;
+    font-size: 14px;
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.dropbtn:hover {
+    background: var(--gradient-hover);
+    transform: translateY(-2px);
+}
+
+/* Contenido del menú desplegable */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--color-bg-card);
+    min-width: 180px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    padding: 0;
+    list-style: none;
+}
+
+/* Estilos para los enlaces dentro del dropdown */
+.dropdown-content li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-content li:last-child {
+    border-bottom: none;
+}
+
+.dropdown-content li a {
+    color: var(--color-text-primary);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: var(--transition-base);
+    background: transparent;
+}
+
+.dropdown-content li a:hover {
+    background: var(--gradient-instagram);
+}
+
+/* Mostrar el menú cuando se activa */
+.dropdown-content.show {
+    display: block;
+}
+
+/* ================================
+    19. RESPONSIVE
+=================================== */
+@media (max-width: 768px) {
+    .dropbtn {
+        width: 100%;
+        text-align: left;
+    }
+
+    .dropdown-content {
+        min-width: 100%;
+        position: static;
+        box-shadow: none;
+    }
+}
+
+/* ================================
+    20. CARRUSEL DE IMÁGENES
+=================================== */
+.hero-carousel {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 400px;
+    overflow: hidden;
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-xl);
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+.carousel-image.active {
+    opacity: 1;
+}
+/* ===================================
+   BOTÓN PAGAR - MODO OSCURO INSTAGRAM
+====================================== */
+.btn-pay {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    background: var(--gradient-instagram);
+    border: none;
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(225, 48, 108, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-pay .pay-icon {
+    font-size: 1.2rem;
+}
+
+/* Efecto de brillo animado al hacer hover */
+.btn-pay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+}
+
+.btn-pay:hover::before {
+    left: 100%;
+}
+
+.btn-pay:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(225, 48, 108, 0.5);
+}
+
+/* Animación cuando se presiona */
+.btn-pay:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* ========================
+   RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+    .btn-pay {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.9rem;
+        padding: 10px 18px;
+    }
+}
+.btn-pay {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+

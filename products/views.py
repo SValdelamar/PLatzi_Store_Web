@@ -2,18 +2,16 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import requests
 import json
 
-
+# Página de inicio
 def inicio(request):
-    """
-    Renderiza la página de inicio.
-    """
     return render(request, "inicio.html")
 
-
+# Listar productos
 def porducts_views(request):
     """
     Obtiene la lista de productos desde la API y los pasa a la plantilla.
@@ -23,7 +21,10 @@ def porducts_views(request):
 
         if response.status_code == 200:
             productos = response.json()
-            return render(request, "lista_productos.html", {'productos': productos})
+            return render(request, "lista_productos.html", {
+                'productos': productos,
+                'user_authenticated': request.user.is_authenticated
+            })
         else:
             return render(request, "lista_productos.html", {'error': f"Error en la API: {response.status_code}"})
 
@@ -35,6 +36,10 @@ def porducts_views(request):
         return render(request, "lista_productos.html", {'error': f'Ocurrió un error inesperado: {str(e)}'})
 
 
+# ---------------------------
+# CREAR PRODUCTO
+# ---------------------------
+@login_required
 def crear_producto_view_form(request):
     """
     Obtiene la lista de categorías desde la API y renderiza
@@ -55,11 +60,9 @@ def crear_producto_view_form(request):
     except requests.exceptions.RequestException as e:
         messages.error(request, f"No se pudieron cargar las categorías. Error: {e}")
         return render(request, "crear_producto.html", {'categorias': []})
-    except Exception as e:
-        messages.error(request, f"Ocurrió un error inesperado: {str(e)}")
-        return render(request, "crear_producto.html", {'categorias': []})
 
 
+@login_required
 @require_http_methods(["POST"])
 def crear_producto(request):
     """
@@ -84,8 +87,7 @@ def crear_producto(request):
             "images": [imagen_url],
         }
 
-        base_url = "https://api.escuelajs.co/api/v1/"
-        subir_respuesta = requests.post(f"{base_url}products/", json=productos_data, timeout=10)
+        subir_respuesta = requests.post("https://api.escuelajs.co/api/v1/products/", json=productos_data, timeout=10)
         subir_respuesta.raise_for_status()
 
         if subir_respuesta.status_code == 201:
@@ -101,27 +103,27 @@ def crear_producto(request):
         return JsonResponse({'success': False, 'error': 'Formato de datos no válido.'}, status=400)
     except requests.exceptions.RequestException as e:
         return JsonResponse({'success': False, 'error': f'Error de conexión con la API: {str(e)}'}, status=500)
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Ocurrió un error inesperado: {str(e)}'}, status=500)
 
 
+# ---------------------------
+# EDITAR PRODUCTO
+# ---------------------------
+@login_required
 def editar_producto_form(request, product_id):
     """
     Obtiene los datos de un producto específico para prellenar el formulario de edición.
     """
     try:
-        response = requests.get(f"https://api.escuelajs.co/api/v1/products/{product_id}")
+        response = requests.get(f"https://api.escuelajs.co/api/v1/products/{product_id}", timeout=10)
         response.raise_for_status()
         producto = response.json()
         return render(request, "editar_producto.html", {'producto': producto})
     except requests.exceptions.RequestException as e:
         messages.error(request, f"Error al obtener el producto para editar: {e}")
         return redirect('products:products')
-    except Exception as e:
-        messages.error(request, f"Ocurrió un error inesperado: {e}")
-        return redirect('products:products')
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["PUT"])
 def editar_producto(request, product_id):
@@ -130,22 +132,18 @@ def editar_producto(request, product_id):
     """
     try:
         data = json.loads(request.body)
-
-        # Recuperar datos enviados desde el frontend
         title = data.get("title")
         price = data.get("price")
         description = data.get("description")
         category_id = data.get("categoryId")
         images = data.get("images")
 
-        # Validar que todos los campos estén presentes
         if not all([title, price, description, category_id, images]):
             return JsonResponse({
                 'success': False,
                 'error': 'Título, precio, descripción, categoría e imágenes son requeridos.'
             }, status=400)
 
-        # Preparar datos para la API
         productos_data = {
             "title": title,
             "price": float(price),
@@ -154,8 +152,7 @@ def editar_producto(request, product_id):
             "images": images if isinstance(images, list) else [images],
         }
 
-        base_url = "https://api.escuelajs.co/api/v1/"
-        subir_respuesta = requests.put(f"{base_url}products/{product_id}", json=productos_data, timeout=10)
+        subir_respuesta = requests.put(f"https://api.escuelajs.co/api/v1/products/{product_id}", json=productos_data, timeout=10)
         subir_respuesta.raise_for_status()
 
         if subir_respuesta.status_code == 200:
@@ -163,20 +160,14 @@ def editar_producto(request, product_id):
 
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Formato de datos JSON no válido.'}, status=400)
-
-    except requests.exceptions.HTTPError as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error en la API: {e.response.status_code} - {e.response.reason} para el ID {product_id}'
-        }, status=e.response.status_code)
-
     except requests.exceptions.RequestException as e:
         return JsonResponse({'success': False, 'error': f'Error de conexión con la API: {str(e)}'}, status=500)
 
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Ocurrió un error inesperado en el servidor: {str(e)}'}, status=500)
 
-
+# ---------------------------
+# ELIMINAR PRODUCTO
+# ---------------------------
+@login_required
 @require_http_methods(["POST"])
 def eliminar_producto(request, product_id):
     """
@@ -195,3 +186,20 @@ def eliminar_producto(request, product_id):
         messages.error(request, f"Error de conexión al intentar eliminar el producto: {e}")
 
     return redirect('products:products')
+
+
+# ---------------------------
+# PAGAR PRODUCTO (PUBLICO)
+# ---------------------------
+def pagar_producto(request, product_id):
+    """
+    Muestra el formulario de pago para un producto específico.
+    """
+    try:
+        response = requests.get(f"https://api.escuelajs.co/api/v1/products/{product_id}", timeout=10)
+        response.raise_for_status()
+        producto = response.json()
+        return render(request, "pagar_producto.html", {'producto': producto})
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error al obtener el producto para pago: {e}")
+        return redirect('products:products')

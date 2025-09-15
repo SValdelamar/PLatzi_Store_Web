@@ -17,4 +17,6 @@ urlpatterns = [
 
     # Eliminar producto
     path('products/<int:product_id>/eliminar/', views.eliminar_producto, name="eliminar_producto"),
+    path('pagar/<int:product_id>/', views.pagar_producto, name='pagar'),  # <--- NUEVA RUTA
+
 ]

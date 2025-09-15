@@ -5,7 +5,11 @@
 {% block content %}
 <div class="products-header">
     <h2 class="section-title">Nuestros Productos</h2>
-    <a href="{% url 'products:crear_producto' %}" class="btn btn-primary">Crear nuevo producto</a>
+
+    {% if user.is_authenticated %}
+        <!-- Solo usuarios autenticados pueden crear productos -->
+        <a href="{% url 'products:crear_producto' %}" class="btn btn-primary">Crear nuevo producto</a>
+    {% endif %}
 </div>
 
 {% if productos %}
@@ -13,16 +17,32 @@
     {% for product in productos %}
     <div class="product-card">
         <img src="{{ product.images.0 }}" class="product-image" alt="{{ product.title }}">
+        
         <div class="card-content">
             <h5 class="card-title">{{ product.title }}</h5>
             <p class="card-description">{{ product.description|truncatechars:100 }}</p>
             <p class="card-price">${{ product.price }}</p>
+
             <div class="product-actions">
-                <a href="{% url 'products:editar_producto_form' product.id %}" class="btn btn-primary">Editar</a>
-                <form action="{% url 'products:eliminar_producto' product.id %}" method="post" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </form>
+                {% if user.is_authenticated %}
+                    <!-- Si el usuario está logueado, puede editar o eliminar -->
+                    <a href="{% url 'products:editar_producto_form' product.id %}" class="btn btn-primary">Editar</a>
+
+                    <form action="{% url 'products:eliminar_producto' product.id %}" 
+                        method="post" style="display:inline;" 
+                        onsubmit="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                {% else %}
+                    <!-- Si el usuario NO ha iniciado sesión, solo ve el botón Pagar -->
+                    <div class="product-actions">
+    <a href="{% url 'products:pagar' product_id=product.id %}" class="btn-pay">
+        <span class="pay-icon">💳</span> Pagar
+    </a>
+</div>
+
+                {% endif %}
             </div>
         </div>
     </div>

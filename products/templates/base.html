@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- Estilos principales -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
@@ -17,7 +17,7 @@
             <div class="header-brand">
                 <!-- Logo -->
                 <img src="https://codevars.gallerycdn.vsassets.io/extensions/codevars/platzi-theme-for-vs-code/1.0.1/1633114361855/Microsoft.VisualStudio.Services.Icons.Default" 
-                     class="site-logo" alt="Logo de Platzi Fake Store">
+                    class="site-logo" alt="Logo de Platzi Fake Store">
 
                 <!-- Título y tagline -->
                 <div class="header-text-container">
@@ -32,11 +32,23 @@
                     <a href="{% url 'products:inicio' %}" class="nav-item">Inicio</a>
                     <a href="{% url 'products:products' %}" class="nav-item">Productos</a>
 
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'accounts:logout' %}" class="nav-item">Cerrar Sesión</a>
-                    {% else %}
-                        <a href="{% url 'accounts:login' %}" class="nav-item">Iniciar Sesión</a>
-                    {% endif %}
+                    <!-- Menú de Login / Usuario -->
+                    <div class="dropdown">
+                        {% if user.is_authenticated %}
+                            <button class="dropbtn">
+                                {{ user.username }} ▼
+                            </button>
+                            <ul class="dropdown-content">
+                                <li><a href="{% url 'accounts:logout' %}">Cerrar Sesión</a></li>
+                            </ul>
+                        {% else %}
+                            <button class="dropbtn">Login ▼</button>
+                            <ul class="dropdown-content">
+                                <li><a href="{% url 'accounts:login' %}">Iniciar Sesión</a></li>
+                                <li><a href="{% url 'accounts:register' %}">Registrarse</a></li>
+                            </ul>
+                        {% endif %}
+                    </div>
                 </div>
             </nav>
         </div>
@@ -57,9 +69,10 @@
 
     <!-- Contenido principal -->
     <main class="container">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </main>
-    
+
     <!-- FOOTER -->
     <footer class="main-footer">
         <div class="footer-content">
@@ -67,7 +80,28 @@
         </div>
     </footer>
 
-    <!-- Scripts opcionales -->
-    {% block scripts %}{% endblock %}
+    <!-- Script para dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('.dropbtn');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    closeAllDropdowns();
+                    const menu = this.nextElementSibling;
+                    menu.classList.toggle('show');
+                });
+            });
+
+            // Cerrar dropdowns si se hace clic fuera
+            document.addEventListener('click', closeAllDropdowns);
+
+            function closeAllDropdowns() {
+                const menus = document.querySelectorAll('.dropdown-content');
+                menus.forEach(menu => menu.classList.remove('show'));
+            }
+        });
+    </script>
 </body>
 </html>
