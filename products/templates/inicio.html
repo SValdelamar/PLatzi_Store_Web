@@ -21,22 +21,16 @@
     </div>
 </div>
 
-<!-- Script para el carrusel -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const images = document.querySelectorAll('.carousel-image');
         let currentIndex = 0;
 
         setInterval(() => {
-            // Oculta la imagen actual
             images[currentIndex].classList.remove('active');
-
-            // Pasa a la siguiente imagen
             currentIndex = (currentIndex + 1) % images.length;
-
-            // Muestra la nueva imagen
             images[currentIndex].classList.add('active');
-        }, 1000); // Cambia cada 1 segundo
+        }, 1000);
     });
 </script>
 {% endblock %}

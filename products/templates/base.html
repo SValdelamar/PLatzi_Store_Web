@@ -5,47 +5,42 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Estilos principales -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
     <title>{% block title %}Platzi Fake Store{% endblock %}</title>
 </head>
 <body>
-    <!-- HEADER -->
     <header class="main-header">
         <div class="header-content-wrapper">
             <div class="header-brand">
-                <!-- Logo -->
                 <img src="https://codevars.gallerycdn.vsassets.io/extensions/codevars/platzi-theme-for-vs-code/1.0.1/1633114361855/Microsoft.VisualStudio.Services.Icons.Default" 
                     class="site-logo" alt="Logo de Platzi Fake Store">
 
-                <!-- Título y tagline -->
                 <div class="header-text-container">
                     <h1 class="site-title">Platzi Fake Store</h1>
                     <p class="site-tagline">Simplemente productos falsos, profesionalmente diseñados.</p>
                 </div>
             </div>
 
-            <!-- Menú de navegación -->
             <nav class="main-nav">
                 <div class="nav-links">
                     <a href="{% url 'products:inicio' %}" class="nav-item">Inicio</a>
                     <a href="{% url 'products:products' %}" class="nav-item">Productos</a>
-
-                    <!-- Menú de Login / Usuario -->
+                    
                     <div class="dropdown">
                         {% if user.is_authenticated %}
                             <button class="dropbtn">
                                 {{ user.username }} ▼
                             </button>
                             <ul class="dropdown-content">
-                                <li><a href="{% url 'accounts:logout' %}">Cerrar Sesión</a></li>
+                                <li><a href="#" id="logout-link">Cerrar Sesión</a></li>
+                                <li><a href="{% url 'accounts:api_profile' %}">Perfil</a></li>
                             </ul>
                         {% else %}
                             <button class="dropbtn">Login ▼</button>
                             <ul class="dropdown-content">
-                                <li><a href="{% url 'accounts:login' %}">Iniciar Sesión</a></li>
-                                <li><a href="{% url 'accounts:register' %}">Registrarse</a></li>
+                                <li><a href="{% url 'accounts:login_form' %}">Iniciar Sesión</a></li>
+                                <li><a href="{% url 'accounts:register_form' %}">Registrarse</a></li>
                             </ul>
                         {% endif %}
                     </div>
@@ -54,7 +49,6 @@
         </div>
     </header>
 
-    <!-- Mensajes de Django -->
     <section class="container mt-3">
         {% if messages %}
             <div class="messages">
@@ -67,24 +61,22 @@
         {% endif %}
     </section>
 
-    <!-- Contenido principal -->
     <main class="container">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- FOOTER -->
     <footer class="main-footer">
         <div class="footer-content">
             <p>&copy; 2025 Platzi Fake Store. Todos los derechos reservados.</p>
         </div>
     </footer>
 
-    <!-- Script para dropdown -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Lógica para el dropdown
             const buttons = document.querySelectorAll('.dropbtn');
-
+            
             buttons.forEach(button => {
                 button.addEventListener('click', function (e) {
                     e.stopPropagation();
@@ -94,12 +86,62 @@
                 });
             });
 
-            // Cerrar dropdowns si se hace clic fuera
             document.addEventListener('click', closeAllDropdowns);
 
             function closeAllDropdowns() {
                 const menus = document.querySelectorAll('.dropdown-content');
                 menus.forEach(menu => menu.classList.remove('show'));
+            }
+
+            // Lógica para el logout
+            const logoutLink = document.getElementById('logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(event) {
+                    event.preventDefault(); // Evita que el enlace recargue la página
+
+                    // Obtiene el token de autenticación del almacenamiento local
+                    const authToken = localStorage.getItem('authToken');
+
+                    // Verifica si existe el token antes de hacer la petición
+                    if (!authToken) {
+                        alert('No hay una sesión activa para cerrar.');
+                        window.location.href = '{% url "products:inicio" %}';
+                        return;
+                    }
+
+                    // Configura los encabezados, incluyendo el token de autorización
+                    const headers = new Headers();
+                    headers.append('Content-Type', 'application/json');
+                    headers.append('X-CSRFToken', '{{ csrf_token }}');
+                    headers.append('Authorization', `Token ${authToken}`);
+
+                    fetch('{% url "accounts:api_logout" %}', {
+                        method: 'POST',
+                        headers: headers,
+                    })
+                    .then(response => {
+                        // Aunque falle la petición, se borra el token para forzar el logout
+                        localStorage.removeItem('authToken');
+                        
+                        if (response.ok) {
+                            alert('¡Sesión cerrada exitosamente!');
+                            window.location.href = '{% url "products:inicio" %}';
+                        } else {
+                            // Maneja el caso de error de la API
+                            return response.json().then(errorData => {
+                                console.error('Error del servidor al cerrar sesión:', errorData);
+                                alert(errorData.detail || 'Error al cerrar sesión.');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error de red:', error);
+                        // También se borra el token si hay un error de red
+                        localStorage.removeItem('authToken');
+                        alert('Ocurrió un error de red. Por favor, inténtalo de nuevo.');
+                        window.location.href = '{% url "products:inicio" %}';
+                    });
+                });
             }
         });
     </script>
